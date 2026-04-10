@@ -72,9 +72,12 @@ describe('OpencodeGoCatalogService', () => {
       expect(byId['minimax-m2.7']).toBe('anthropic');
     });
 
-    it('skips the header row', () => {
+    it('never matches the header row (uppercase model ID column fails regex)', () => {
+      // The regex anchors the model-id group on [a-z], so "Model ID" in the
+      // header row column does not match. No explicit skip needed.
       const entries = service.parse(SAMPLE_MDX);
       expect(entries.find((e) => e.displayName === 'Model')).toBeUndefined();
+      expect(entries.find((e) => e.id === 'model id')).toBeUndefined();
     });
 
     it('returns an empty array when the table is missing', () => {
@@ -129,8 +132,15 @@ describe('OpencodeGoCatalogService', () => {
       expect(result).toEqual([]);
     });
 
-    it('returns [] when the fetch throws and nothing is cached', async () => {
+    it('returns [] when the fetch throws an Error and nothing is cached', async () => {
       fetchSpy.mockRejectedValue(new Error('network down'));
+      const result = await service.list();
+      expect(result).toEqual([]);
+    });
+
+    it('returns [] when the fetch throws a non-Error value', async () => {
+      // Exercises the String(err) fallback when something non-Error is thrown.
+      fetchSpy.mockRejectedValue('raw string failure');
       const result = await service.list();
       expect(result).toEqual([]);
     });

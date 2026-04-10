@@ -67,7 +67,9 @@ export class OpencodeGoCatalogService {
     while ((match = rowRe.exec(mdx)) !== null) {
       const [, rawName, modelId, endpointSuffix] = match;
       const displayName = rawName.trim();
-      if (displayName.toLowerCase() === 'model') continue;
+      // The header row never matches: "Model ID" starts uppercase, failing the
+      // lowercase-anchored modelId group. Dash separator rows likewise start
+      // with '-', not [A-Za-z]. So any row reaching this point is a data row.
       if (seen.has(modelId)) continue;
       seen.add(modelId);
       entries.push({
