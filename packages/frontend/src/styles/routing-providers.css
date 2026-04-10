@@ -511,6 +511,20 @@
   line-height: 1.5;
 }
 
+.provider-detail__signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  margin-bottom: 16px;
+  padding: 8px 14px;
+  min-height: 44px;
+}
+
+.provider-detail__signin-btn svg {
+  flex-shrink: 0;
+}
+
 .provider-detail__disconnect {
   color: hsl(var(--destructive));
   border-color: hsl(var(--destructive) / 0.3);
