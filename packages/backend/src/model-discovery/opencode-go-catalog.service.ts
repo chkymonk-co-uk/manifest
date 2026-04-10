@@ -12,6 +12,9 @@ export interface OpencodeGoCatalogEntry {
 const CATALOG_URL =
   'https://raw.githubusercontent.com/anomalyco/opencode/dev/packages/web/src/content/docs/go.mdx';
 const CACHE_TTL_MS = 60 * 60 * 1000;
+// After a fetch failure we reuse the last-known-good list for a shorter window
+// so a sustained outage does not turn into a per-call retry storm.
+const ERROR_BACKOFF_MS = 5 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 10_000;
 
 /**
@@ -38,13 +41,13 @@ export class OpencodeGoCatalogService {
       });
       if (!response.ok) {
         this.logger.warn(`OpenCode Go catalog fetch returned ${response.status}`);
-        return this.lastGood ?? [];
+        return this.cacheFallback(now);
       }
       const mdx = await response.text();
       const entries = this.parse(mdx);
       if (entries.length === 0) {
         this.logger.warn('OpenCode Go catalog parsed zero entries — docs format may have changed');
-        return this.lastGood ?? [];
+        return this.cacheFallback(now);
       }
       this.cache = { entries, expiresAt: now + CACHE_TTL_MS };
       this.lastGood = entries;
@@ -53,8 +56,18 @@ export class OpencodeGoCatalogService {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.warn(`OpenCode Go catalog fetch failed: ${message}`);
-      return this.lastGood ?? [];
+      return this.cacheFallback(now);
     }
+  }
+
+  /**
+   * Set a short error-backoff cache so repeated calls during an outage do not
+   * hammer the network, then return the last-known-good list (or []).
+   */
+  private cacheFallback(now: number): OpencodeGoCatalogEntry[] {
+    const entries = this.lastGood ?? [];
+    this.cache = { entries, expiresAt: now + ERROR_BACKOFF_MS };
+    return entries;
   }
 
   /** Parse the Endpoints markdown table out of the go.mdx source. */

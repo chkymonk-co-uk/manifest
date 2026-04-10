@@ -118,12 +118,27 @@ describe('OpencodeGoCatalogService', () => {
       const good = await service.list();
       expect(good).toHaveLength(7);
 
-      service.resetCache();
-      (service as unknown as { lastGood: unknown }).lastGood = good;
+      // Force the success cache to look expired, but keep lastGood populated.
+      (service as unknown as { cache: unknown }).cache = null;
 
       fetchSpy.mockResolvedValueOnce({ ok: false, status: 500 } as Response);
       const afterFailure = await service.list();
-      expect(afterFailure).toBe(good);
+      expect(afterFailure).toEqual(good);
+    });
+
+    it('backs off after a failure so repeated calls do not hammer the network', async () => {
+      // First fetch fails with nothing cached → returns [] and arms the
+      // error-backoff window.
+      fetchSpy.mockResolvedValueOnce({ ok: false, status: 503 } as Response);
+      const first = await service.list();
+      expect(first).toEqual([]);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+      // Second call within the backoff window reuses the cached fallback and
+      // must NOT reach the network.
+      const second = await service.list();
+      expect(second).toEqual([]);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
 
     it('returns [] when there is no prior cache and the fetch 404s', async () => {
