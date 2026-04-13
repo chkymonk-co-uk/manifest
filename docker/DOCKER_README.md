@@ -130,7 +130,6 @@ docker run -d \
   -e DATABASE_URL=postgresql://user:pass@host:5432/manifest \
   -e BETTER_AUTH_SECRET=$(openssl rand -hex 32) \
   -e BETTER_AUTH_URL=http://localhost:3001 \
-  -e AUTO_MIGRATE=true \
   manifestdotbuild/manifest
 ```
 
@@ -147,7 +146,6 @@ docker run -d `
   -e DATABASE_URL=postgresql://user:pass@host:5432/manifest `
   -e BETTER_AUTH_SECRET=$secret `
   -e BETTER_AUTH_URL=http://localhost:3001 `
-  -e AUTO_MIGRATE=true `
   manifestdotbuild/manifest
 ```
 
@@ -164,13 +162,12 @@ docker run -d ^
   -e DATABASE_URL=postgresql://user:pass@host:5432/manifest ^
   -e BETTER_AUTH_SECRET=<your-64-char-secret> ^
   -e BETTER_AUTH_URL=http://localhost:3001 ^
-  -e AUTO_MIGRATE=true ^
   manifestdotbuild/manifest
 ```
 
 </details>
 
-`AUTO_MIGRATE=true` runs TypeORM migrations on first boot. Then visit [http://localhost:3001](http://localhost:3001) and complete the setup wizard to create your admin account.
+TypeORM migrations run automatically on every boot — fresh installs come up with the schema in place. Then visit [http://localhost:3001](http://localhost:3001) and complete the setup wizard to create your admin account.
 
 ### Verifying the image signature
 

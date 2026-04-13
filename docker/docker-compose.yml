@@ -32,7 +32,6 @@ services:
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3001}
       - SEED_DATA=false
       - NODE_ENV=production
-      - AUTO_MIGRATE=true
       # Email provider (optional). Covers both login/verification emails
       # and threshold alert notifications. Set one provider block — see
       # DOCKER_README.md "Email setup". Supports resend, mailgun, sendgrid.
